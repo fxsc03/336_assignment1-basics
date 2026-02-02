@@ -87,6 +87,7 @@ def test_train_bpe_special_tokens(snapshot):
         },
     )
 
+# done
 # 做一个小数据集的验证
 def test_toy_example(tmp_path):
     """
