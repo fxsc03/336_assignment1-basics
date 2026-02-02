@@ -86,3 +86,48 @@ def test_train_bpe_special_tokens(snapshot):
             "merges": merges,
         },
     )
+
+# 做一个小数据集的验证
+def test_toy_example(tmp_path):
+    """
+    这是一个自定义的极简测试。
+    目的是验证：
+    1. 代码能不能跑通（不报错）。
+    2. 能不能正确合并最高频的字符对。
+    """
+    # 1. 创建一个临时的小文件
+    # 这里的文本设计很有讲究："ab" 连续出现了 4 次，是频率最高的
+    # 预期 BPE 第一步一定会合并 'a' 和 'b'
+    toy_text = "ab ab ab ab c d e f"
+    
+    p = tmp_path / "toy_corpus.txt"
+    p.write_text(toy_text, encoding="utf-8")
+
+    # 2. 运行你的 BPE 函数
+    # vocab_size 设置为 258：
+    # 256 (基础字符) + 2 (我们需要合并两次看看效果)
+    print("\n>>> 开始运行 Toy Test...")
+    vocab, merges = run_train_bpe(
+        input_path=p,
+        vocab_size=256 + 2, 
+        special_tokens=[],
+    )
+
+    # 3. 打印结果帮你看清发生了什么 (配合 -s 参数)
+    print("\n>>> [Debug] Merges 列表:", merges)
+    
+    # 4. 简单的断言验证
+    # 验证是否产生了合并
+    assert len(merges) > 0
+    
+    # 验证第一个合并的是否是 'a' 和 'b' (对应字节)
+    # 注意：ord('a')=97, ord('b')=98
+    first_merge = merges[0]
+    expected_merge = (b'a', b'b')
+    
+    if first_merge == expected_merge:
+        print(">>> [Pass] 成功识别出最高频组合 (a, b)！")
+    else:
+        print(f">>> [Fail] 预期合并 (a, b)，实际合并了 {first_merge}")
+    
+    assert first_merge == expected_merge

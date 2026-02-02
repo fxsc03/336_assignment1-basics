@@ -27,8 +27,8 @@ share/python-wheels/
 MANIFEST
 
 # PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+#   Usually these files are written by a python script from a template
+#   before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
 
@@ -161,3 +161,17 @@ cython_debug/
 
 .ruff_cache/
 *.zip
+
+# ==========================
+# Project Specific Ignores
+# ==========================
+
+# Dataset directory (contains large files)
+data/
+
+# Generated BPE files
+vocab.json
+merges.txt
+
+# Temporary test files
+tests/Untitled
