@@ -5,7 +5,7 @@ import collections
 from typing import List, Tuple, Dict, Set
 from collections import Counter  # ✅ 必须是从 collections 导入
 import json
-import regex    
+# import regex    
 from collections import defaultdict
 import pickle
 
