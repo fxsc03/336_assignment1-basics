@@ -11,6 +11,7 @@ from torch import Tensor
 
 from cs336_basics.Pair_to_All__BPE_Tokenizer_Training import run_train_bpe as my_run_train_bpe
 from cs336_basics.Tokenizer import Tokenizer as my_Tokenizer  
+from cs336_basics.linear_module import LinearModule as my_LinearModule
 
 def run_linear(
     d_in: int,
@@ -31,8 +32,18 @@ def run_linear(
         Float[Tensor, "... d_out"]: The transformed output of your linear module.
     """
 
-    raise NotImplementedError
-
+# 1. 实例化你的模型
+    # 这里的 device 和 dtype 最好直接从传入的 weights 里取，防止设备不一致报错
+    model = my_LinearModule(d_in, d_out, device=weights.device, dtype=weights.dtype)
+    
+    # 2. 加载权重 (核心步骤)
+    # 这里的 key "W" 必须和你类里面定义的 self.W 名字完全一致！
+    state_dict = {"W": weights}
+    model.load_state_dict(state_dict)
+    
+    # 3. 运行并返回
+    return model(in_features)
+    # raise NotImplementedError
 
 def run_embedding(
     vocab_size: int,
