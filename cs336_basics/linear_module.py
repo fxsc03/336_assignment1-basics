@@ -14,7 +14,7 @@ class LinearModule(nn.Module):
         self.W = nn.Parameter(torch.empty(self.out_features, self.in_features, device = self.device, dtype = self.dtype))
 
         std = sqrt(2) / (self.out_features + self.in_features) ** 0.5
-        torch.nn.init.trunc_normal_(self.W, mean = 0, std = std, a = -3 * std, b = 3 * std)      
+        torch.nn.init.trunc_normal_(self.W, mean = 0.0, std = std, a = -3 * std, b = 3 * std)      
 
 
 

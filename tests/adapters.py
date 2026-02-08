@@ -12,6 +12,12 @@ from torch import Tensor
 from cs336_basics.Pair_to_All__BPE_Tokenizer_Training import run_train_bpe as my_run_train_bpe
 from cs336_basics.Tokenizer import Tokenizer as my_Tokenizer  
 from cs336_basics.linear_module import LinearModule as my_LinearModule
+from cs336_basics.embedding_module import EmbeddingModel as my_EmbeddingModule
+from cs336_basics.RMSnorm import RMSNorm as my_RMSNorm
+from cs336_basics.SwiGLU import SwiGLU as my_SwiGLU
+from cs336_basics.RoPE import RoPE as my_RoPE
+from cs336_basics.softmax import softmax as my_softmax
+
 
 def run_linear(
     d_in: int,
@@ -63,8 +69,15 @@ def run_embedding(
     Returns:
         Float[Tensor, "... d_model"]: Batch of embeddings returned by your Embedding layer.
     """
+    model = my_EmbeddingModule(vocab_size, d_model)
+    
+    state_dict = {"W": weights}
+    model.load_state_dict(state_dict)
+    
+    # 3. 运行并返回
+    return model(token_ids)
 
-    raise NotImplementedError
+    # raise NotImplementedError
 
 
 def run_swiglu(
@@ -96,7 +109,25 @@ def run_swiglu(
     # swiglu.w1.weight.data = w1_weight
     # swiglu.w2.weight.data = w2_weight
     # swiglu.w3.weight.data = w3_weight
-    raise NotImplementedError
+    model = my_SwiGLU(d_model, d_ff)
+
+    # 2. 组装 State Dict (权重字典)
+    # 关键点：这里的 Key ("w1.weight") 必须对应你类里的 self.w1
+    state_dict = {
+        "W1.weight": w1_weight,  # Gate Proj
+        "W2.weight": w3_weight,  # Down Proj
+        "W3.weight": w2_weight   # Up Proj
+    }
+
+    # 3. 加载权重
+    # strict=True (默认) 会帮你检查形状是否匹配
+    model.load_state_dict(state_dict)
+
+    # 4. 前向传播并返回
+    return model(in_features)
+
+
+    # raise NotImplementedError
 
 
 def run_scaled_dot_product_attention(
@@ -213,7 +244,12 @@ def run_rope(
     Returns:
         Float[Tensor, " ... sequence_length d_k"]: Tensor with RoPEd input.
     """
-    raise NotImplementedError
+    model = my_RoPE(theta, d_k, max_seq_len, in_query_or_key.device)
+
+    return model(in_query_or_key, token_positions)
+
+
+    # raise NotImplementedError
 
 
 def run_transformer_block(
@@ -391,7 +427,15 @@ def run_rmsnorm(
         Float[Tensor,"... d_model"]: Tensor of with the same shape as `in_features` with the output of running
         RMSNorm of the `in_features`.
     """
-    raise NotImplementedError
+    # raise NotImplementedError
+    model = my_RMSNorm(d_model, eps)
+    
+    state_dict = {"W": weights}
+    model.load_state_dict(state_dict)
+    
+    # 3. 运行并返回
+    return model(in_features)
+    
 
 
 def run_silu(in_features: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
@@ -444,7 +488,9 @@ def run_softmax(in_features: Float[Tensor, " ..."], dim: int) -> Float[Tensor, "
         Float[Tensor, "..."]: Tensor of with the same shape as `in_features` with the output of
         softmax normalizing the specified `dim`.
     """
-    raise NotImplementedError
+    return my_softmax(in_features, dim)
+
+    # raise NotImplementedError
 
 
 def run_cross_entropy(
