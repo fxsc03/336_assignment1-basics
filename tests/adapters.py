@@ -17,6 +17,8 @@ from cs336_basics.RMSnorm import RMSNorm as my_RMSNorm
 from cs336_basics.SwiGLU import SwiGLU as my_SwiGLU
 from cs336_basics.RoPE import RoPE as my_RoPE
 from cs336_basics.softmax import softmax as my_softmax
+from cs336_basics.scaled_dot_product_attention import scaleddotproductattention as my_scaleddotproductattention
+from cs336_basics.multi_head_self_attention import MultiHeadAttention as my_MultiHeadAttention
 
 
 def run_linear(
@@ -148,7 +150,12 @@ def run_scaled_dot_product_attention(
     Returns:
         Float[Tensor, " ... queries d_v"]: Output of SDPA
     """
-    raise NotImplementedError
+    module = my_scaleddotproductattention()
+
+    return module(Q, K, V, mask)
+
+
+    # raise NotImplementedError
 
 
 def run_multihead_self_attention(
@@ -182,7 +189,18 @@ def run_multihead_self_attention(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+    module = my_MultiHeadAttention(d_model, num_heads)
+
+    return module(
+        x=in_features, 
+        wq=q_proj_weight, 
+        wk=k_proj_weight, 
+        wv=v_proj_weight, 
+        wo=o_proj_weight
+    )
+
+
+    # raise NotImplementedError
 
 
 def run_multihead_self_attention_with_rope(
