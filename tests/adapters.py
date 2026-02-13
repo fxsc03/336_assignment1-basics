@@ -20,6 +20,8 @@ from cs336_basics.softmax import softmax as my_softmax
 from cs336_basics.scaled_dot_product_attention import scaleddotproductattention as my_scaleddotproductattention
 from cs336_basics.multi_head_self_attention import MultiHeadAttention as my_MultiHeadAttention
 from cs336_basics.multi_head_self_attention import MultiHeadAttention_rope as my_MultiHeadAttention_rope
+from cs336_basics.transformer_block import TransformerBlock as my_TransformerBlock
+from cs336_basics.transformer_lm import TransformerLM as my_TransformerLM
 
 
 def run_linear(
@@ -351,7 +353,39 @@ def run_transformer_block(
         Float[Tensor, "batch sequence_length d_model"] Tensor with the output of
         running the Transformer block on the input features while using RoPE.
     """
-    raise NotImplementedError
+    # 1. 获取设备 (非常重要，否则会报错 Expected all tensors to be on the same device)
+    device = in_features.device
+
+    # 2. 构造与 TransformerBlock.set_para 一致的权重复制
+    block_weights = {
+        'attn.q_proj.weight': weights['attn.q_proj.weight'],
+        'attn.k_proj.weight': weights['attn.k_proj.weight'],
+        'attn.v_proj.weight': weights['attn.v_proj.weight'],
+        'attn.output_proj.weight': weights['attn.output_proj.weight'],
+        'ln1.weight': weights['ln1.weight'],
+        'ln2.weight': weights['ln2.weight'],
+        'ffn.w1.weight': weights['ffn.w1.weight'],
+        'ffn.w2.weight': weights['ffn.w2.weight'],
+        'ffn.w3.weight': weights['ffn.w3.weight'],
+    }
+
+    # 3. 实例化 TransformerBlock（仅传超参数），再通过 set_para 加载权重
+    block = my_TransformerBlock(
+        d_model=d_model,
+        n_heads=num_heads,
+        d_ff=d_ff,
+        max_seq_len=max_seq_len,
+        theta=theta,
+        device=device
+    )
+    block.set_para(block_weights)
+
+    # 4. 确保模型在正确的设备上
+    block.to(device)
+
+    # 5. 运行 Forward
+    return block(in_features)
+    # raise NotImplementedError
 
 
 def run_transformer_lm(
@@ -433,7 +467,59 @@ def run_transformer_lm(
         Float[Tensor, "batch_size sequence_length vocab_size"]: Tensor with the predicted unnormalized
         next-word distribution for each token.
     """
-    raise NotImplementedError
+    device = in_indices.device
+
+    # 1. 实例化模型 (✅ 修正点：只传超参数，不传权重 Tensor)
+    # 你的 TransformerLM.__init__ 应该只接收这些参数
+    model = my_TransformerLM(
+        vocab_size=vocab_size,
+        context_length=context_length,
+        d_model=d_model,
+        num_layers=num_layers,
+        num_heads=num_heads,
+        d_ff=d_ff,
+        rope_theta=rope_theta,
+        device=device
+    )
+    
+    # 2. 手动加载权重 (✅ 修正点：在这里通过循环加载权重)
+    with torch.no_grad():
+        # --- A. Embedding ---
+        # 确保你的 EmbeddingModel 里的成员变量名对得上
+        model.embdedding.W.copy_(weights['token_embeddings.weight'])
+        
+        # --- B. Layers (循环每一层) ---
+        for i in range(num_layers):
+            block = model.layers[i] # 获取第 i 层 Block
+            prefix = f"layers.{i}." # 权重的 key 前缀，如 layers.0.
+            
+            # 构造这一层的参数字典
+            block_weights = {
+                'attn.q_proj.weight': weights[f'{prefix}attn.q_proj.weight'],
+                'attn.k_proj.weight': weights[f'{prefix}attn.k_proj.weight'],
+                'attn.v_proj.weight': weights[f'{prefix}attn.v_proj.weight'],
+                'attn.output_proj.weight': weights[f'{prefix}attn.output_proj.weight'],
+                'ln1.weight': weights[f'{prefix}ln1.weight'],
+                'ln2.weight': weights[f'{prefix}ln2.weight'],
+                # 必须转置！
+                'ffn.w1.weight': weights[f'{prefix}ffn.w1.weight'], # set_para 里会转置
+                'ffn.w2.weight': weights[f'{prefix}ffn.w2.weight'], 
+                'ffn.w3.weight': weights[f'{prefix}ffn.w3.weight']
+            }
+            
+            # 调用 Block 的 set_para
+            block.set_para(block_weights)
+            
+        # --- C. Final Norm (RMSNorm 使用 .W 而非 .weight) ---
+        model.norm.W.copy_(weights['ln_final.weight'])
+        
+        # --- D. LM Head ---
+        # 假设你的 LinearModule 里有一个 nn.Linear 叫 linear
+        model.linear.W.copy_(weights['lm_head.weight'])
+
+    # 3. 运行模型
+    return model(in_indices)
+   
 
 
 def run_rmsnorm(
