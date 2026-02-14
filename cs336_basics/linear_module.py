@@ -3,6 +3,7 @@ import torch
 from torch import nn
 
 class LinearModule(nn.Module):
+    # 这里没有激活函数，直接硬线性变换，为的是得到概率分布
     # 这里的in_features和out_features都是
     def __init__(self, in_features, out_features, device = None, dtype = None):
         super().__init__()
