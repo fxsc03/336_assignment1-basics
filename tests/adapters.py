@@ -23,6 +23,7 @@ from cs336_basics.multi_head_self_attention import MultiHeadAttention_rope as my
 from cs336_basics.transformer_block import TransformerBlock as my_TransformerBlock
 from cs336_basics.transformer_lm import TransformerLM as my_TransformerLM
 from cs336_basics.cross_entropy import CrossEntropyLoss as my_crossentropyloss
+from cs336_basics.adamW import AdamW as my_AdamW
 
 
 def run_linear(
@@ -645,7 +646,8 @@ def get_adamw_cls() -> Any:
     """
     Returns a torch.optim.Optimizer that implements AdamW.
     """
-    raise NotImplementedError
+    return my_AdamW
+    # raise NotImplementedError
 
 
 def run_get_lr_cosine_schedule(
