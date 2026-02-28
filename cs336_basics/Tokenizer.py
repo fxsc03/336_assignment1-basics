@@ -79,8 +79,8 @@ class Tokenizer:
     def from_files(cls, vocab_filepath, merge_filepath, specail_tokens: List[str] | None = None):
 
 
-        vocab: dict[int, bytes] = []
-        with open(vocab_filepath, "r", encoding = "utf-8")as f:
+        vocab: dict[int, bytes] = {}
+        with open(vocab_filepath, "r", encoding="utf-8") as f:
             raw_vocab = json.load(f)
         
         for k, v in raw_vocab.items():

@@ -11,8 +11,8 @@ class RoPE(nn.Module):
         self.max_seq_len = max_seq_len
         self.device = device
 
-        freqs = 1.0/(self.theta ** (torch.arange(0, self.d_k, 2).float() / self.d_k))
-        pos = torch.arange(self.max_seq_len, device = device)
+        freqs = 1.0 / (self.theta ** (torch.arange(0, self.d_k, 2, device=device).float() / self.d_k))
+        pos = torch.arange(self.max_seq_len, device=device)
         # max_seq , d_k/2 每一行对应每个token的旋转角度
         sinusoids = torch.outer(pos, freqs)
 
