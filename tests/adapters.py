@@ -27,6 +27,8 @@ from cs336_basics.adamW import AdamW as my_AdamW
 from cs336_basics.lr_cosine_shedule import get_lr_cosine_schedule as my_get_lr_cosine_schedule
 from cs336_basics.gradient_clipping import GradientClipping as my_GradientClipping
 from cs336_basics.dataloader import run_get_batch as my_run_get_batch
+from cs336_basics.checkpoint import save_checkpoint as my_save_checkpoint
+from cs336_basics.checkpoint import load_checkpoint as my_load_checkpoint
 
 
 def run_linear(
@@ -701,7 +703,9 @@ def run_save_checkpoint(
             we've completed.
         out (str | os.PathLike | BinaryIO | IO[bytes]): Path or file-like object to serialize the model, optimizer, and iteration to.
     """
-    raise NotImplementedError
+
+    return my_save_checkpoint(model, optimizer, iteration, out)
+    # raise NotImplementedError
 
 
 def run_load_checkpoint(
@@ -722,7 +726,9 @@ def run_load_checkpoint(
     Returns:
         int: the previously-serialized number of iterations.
     """
-    raise NotImplementedError
+
+    return my_load_checkpoint(src, model, optimizer)
+    # raise NotImplementedError
 
 
 def get_tokenizer(
